@@ -1,85 +1,80 @@
-# Базовая настройка
+# Спринт 3
+## Анализ и план работ
 
-## Запуск minikube
+### Возможности исходного монолитного приложения
 
-[Инструкция по установке](https://minikube.sigs.k8s.io/docs/start/)
+API предоставляет следующие функции:
+ - дистанционное управление отоплением (включение/выключение),
+ - установка требуемой температуры,
+ - просмотр текущей температуры,
+ - автоматическое поддержание температуры (функция в разработке, см. комментарий разработчика: // TODO: Реализовать логику автоматического поддержания температуры в слое сервиса).
 
-```bash
-minikube start
-```
+### Структура исходного монолита
 
-## Добавление токена авторизации GitHub
+ - Язык: Java
+ - Хранилище данных: PostgreSQL
+ - Архитектура: монолитная
+ - Работа с пользователем: HTTP-запросы, синхронная обработка
+ - Взаимодействие с VendorAPI: документация отсутствует
+ - Масштабируемость: вертикальная
+ - Деплой: виртуальная машина, необходимо остановить для обслуживания.
 
-[Получение токена](https://github.com/settings/tokens/new)
+### Домены и контексты
 
-```bash
-kubectl create secret docker-registry ghcr --docker-server=https://ghcr.io --docker-username=<github_username> --docker-password=<github_token> -n default
-```
+ - Домен: Управление устройствами
+   - Контекст: Контроль за отоплением — включение и выключение системы
+   - Контекст: Настройка температуры — установка требуемого значения
+ - Домен: Температурный мониторинг
+   - Контекст: Обработка данных с датчиков температуры — отображение текущей температуры
 
-## Установка API GW kusk
+### Проблемные аспекты монолита
+ - Ограниченные функции (нет возможности добавления новых устройств через API, отсутствует автоматическое поддержание температуры)
+ - Низкие показатели масштабируемости, отказоустойчивости и скорости разработки
+ - Зависимость от VendorAPI из-за отсутствия собственного производства оборудования
 
-[Install Kusk CLI](https://docs.kusk.io/getting-started/install-kusk-cli)
+### Контекстная диаграмма
 
-```bash
-kusk cluster install
-```
+Схема [текущего монолита](./diagrams/monolith/context.puml)
 
-## Смена адреса образа в helm chart
+Отрендеренная схема ![текущего монолита](./diagrams/monolith/context.png)
 
-После того как вы сделали форк репозитория и у вас в репозитории отработал GitHub Action. Вам нужно получить адрес образа <https://github.com/><github_username>/architecture-sprint-3/pkgs/container/architecture-sprint-3
 
-Он выглядит таким образом
-```ghcr.io/<github_username>/architecture-sprint-3:latest```
+## Проектирование новой архитектуры на микросервисах
 
-Замените адрес образа в файле `helm/smart-home-monolith/values.yaml` на полученный файл:
+### Декомпозиция на микросервисы
 
-```yaml
-image:
-  repository: ghcr.io/<github_username>/architecture-sprint-3
-  tag: latest
-```
+ - Управление устройствами
+ - Управление пользователями и их домами
+ - Взаимодействие с внешними API
+ - Мониторинг состояния устройств
 
-## Настройка terraform
+### Диаграмма контейнеров
+Схема [диаграмма контейнеров](./diagrams/containers/SmartHomeSystem.puml)
 
-[Установите Terraform](https://yandex.cloud/ru/docs/tutorials/infrastructure-management/terraform-quickstart#install-terraform)
+Отрендеренная схема ![диаграммы контейнеров](./diagrams/containers/SmartHomeSystem.png)
 
-Создайте файл ~/.terraformrc
+### Диаграмма компонентов
 
-```hcl
-provider_installation {
-  network_mirror {
-    url = "https://terraform-mirror.yandexcloud.net/"
-    include = ["registry.terraform.io/*/*"]
-  }
-  direct {
-    exclude = ["registry.terraform.io/*/*"]
-  }
-}
-```
+#### Компонент для управления устройствами
 
-## Применяем terraform конфигурацию
+Схема [диаграмма компонентов](./diagrams/components/device-management/SmartHomeSystem.puml)
 
-```bash
-cd terraform
-terraform init
-terraform apply
-```
+Отрендеренная схема ![диаграммы компонентов](./diagrams/components/device-management/SmartHomeSystem.png)
 
-## Настройка API GW
+#### Компонент для обработки телеметрии
 
-```bash
-kusk deploy -i api.yaml
-```
+Схема [диаграмма компонентов](./diagrams/components/telemetry-management/SmartHomeSystem.puml)
 
-## Проверяем работоспособность
+Отрендеренная схема ![диаграммы компонентов](./diagrams/components/telemetry-management/SmartHomeSystem.png)
 
-```bash
-kubectl port-forward svc/kusk-gateway-envoy-fleet -n kusk-system 8080:80
-curl localhost:8080/hello
-```
+### Диаграмма структуры кода
 
-## Delete minikube
+Схема [диаграмма структуры кода](./diagrams/code/SmartHomeSystem.puml)
 
-```bash
-minikube delete
-```
+Отрендеренная схема ![диаграммы структуры кода](./diagrams/code/SmartHomeSystem.png)
+
+### ER-диаграмма данных
+
+Схема [ER-диаграммы](./diagrams/er/SmartHomeSystem.puml)
+
+Отрендеренная схема ![ER-диаграммы](./diagrams/er/SmartHomeSystem.png)

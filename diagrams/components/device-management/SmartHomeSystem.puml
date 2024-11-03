@@ -1,0 +1,29 @@
+@startuml
+    !include <C4/C4_Container.puml>
+    !include <C4/C4_Component.puml>
+
+    LAYOUT_WITH_LEGEND()
+
+    Container_Boundary(DeviceService, "Сервис устройств") {
+        Component(DeviceServiceAPI, "API Сервиса устройств", "golang", "Обработка API запросов")
+        Component(DeviceCommandHandler, "Обработчик команд устройств", "golang", "Обрабатывает команды")
+        Component(DeviceStateManager, "Менеджер состояния устройства", "golang", "Управляет состоянием устройств")
+    }
+
+    ContainerDb(DeviceDB, "База данных устройств", "PostgreSQL", "Хранит данные об устройствах")
+    Container(TelemetryService, "Сервис телеметрии", "Управляет данными телеметрии")
+    Container(UserService, "Сервис пользователей", "golang", "Управляет данными пользователей")
+    Container(APIgw, "API Шлюз", "Kong", "Управляет вызовами API")
+    SystemQueue(AppQueue, "Шина событий", "Apache Kafka")
+
+    Rel(UserService, DeviceServiceAPI, "Использует")
+    Rel(DeviceServiceAPI, DeviceCommandHandler, "Запросы")
+    BiRel(DeviceCommandHandler, DeviceStateManager, "Взаимодействие")
+    Rel(DeviceStateManager, DeviceDB, "Сохраняет данные")
+    Rel(DeviceServiceAPI, DeviceDB, "Использует")
+    Rel(DeviceCommandHandler, AppQueue, "Отправляет события")
+    Rel(AppQueue, DeviceStateManager, "Передача данных")
+    BiRel(DeviceStateManager, TelemetryService, "Обмен данными")
+    Rel(APIgw, DeviceServiceAPI, "Запросы")
+
+@enduml

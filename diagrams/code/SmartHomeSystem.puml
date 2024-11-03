@@ -1,0 +1,79 @@
+@startuml
+  !include <C4/C4_Component.puml>
+
+Container_Boundary(DeviceService, "Сервис управления устройствами") {
+    package "Сервис устройств" {
+        class Device {
+            +UUID id
+            +UUID vendor_id
+            +UUID owner_id
+            +UUID house_id
+            +String name
+            +Boolean is_active
+            +function process_command(id, command)
+            +function get_status(id)
+        }
+    }
+    package "Обработчик команд устройства" {
+        class DeviceCommandHandler {
+            +function handle_command(id, command, User.VendorToken)
+        }
+    }
+    package "Менеджер состояния устройства" {
+        class DeviceStateManager {
+            +function get_state(id)
+            +function save_state(id, state)
+        }
+    }
+    Device <--> DeviceCommandHandler
+    Device <--> DeviceStateManager
+    DeviceCommandHandler <--> DeviceStateManager
+    DeviceStateManager <--> DeviceDB
+}
+
+Container_Boundary(TelemetryService, "Сервис телеметрии") {
+    package "Сервис телеметрии" {
+        class Telemetry {
+            +UUID device_id
+            +Telemetry data
+            +function get_telemetry_data(device_id)
+            +function save_telemetry_data(device_id, data)
+        }
+    }
+    DeviceStateManager <--> Telemetry
+    Telemetry <--> TelemetryDB
+}
+
+Container_Boundary(UserService, "Сервис пользователей") {
+    package "Сервис пользователей" {
+        class User {
+            +UUID id
+            +UUID house_id
+            +VendorToken vendor_token
+            +String name
+            +String email
+            +String password
+            +function get_user_data(id)
+            +function save_user(user)
+        }
+    }
+    User <--> Device
+    User <--> UserDB
+}
+
+Container_Boundary(VendorAPI, "API производителя") {
+    package "API производителя" {
+        class Vendor {
+            +UUID vendor_id
+            +VendorParams params
+            +function get_device_status(id)
+            +function set_device_command(id, command)
+        }
+    }
+    Vendor <--> DeviceCommandHandler
+    Vendor <--> DeviceStateManager
+    Vendor --> Telemetry
+    Vendor <--> VendorDB
+}
+
+@enduml

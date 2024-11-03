@@ -1,0 +1,52 @@
+@startuml
+    !include <C4/C4_Container.puml>
+
+    LAYOUT_WITH_LEGEND()
+
+    Person(person, "Пользователь", "Человек, использующий SmartSystem")
+    Person(administrator, "Администратор", "Управляет системой SmartSystem")
+    System_Boundary(SmartHomeSystem, "Система Умного Дома") {
+        Container(WebApp, "Веб-приложение", "React", "Веб-приложение для управления умным домом")
+        Container(MobileApp, "Мобильное приложение", "React Native", "Мобильное приложение для управления умным домом")
+        Container(APIgw, "API Шлюз", "Kong", "Управляет вызовами API")
+
+        Container(DeviceService, "Сервис устройств", "golang", "Обрабатывает данные устройств")
+        ContainerDb(DeviceDB, "База данных устройств", "PostgreSQL", "Хранит данные об устройствах")
+
+        Container(TelemetryService, "Сервис телеметрии", "Обрабатывает телеметрические данные")
+        ContainerDb(TelemetryDb, "База данных телеметрии", "Redis", "Хранит данные телеметрии")
+
+        Container(VendorService, "Сервис поставщика", "golang", "Обрабатывает запросы к API поставщика")
+        ContainerDb(VendorServiceDB, "База данных поставщика", "PostgreSQL", "Хранит данные поставщика")
+
+        Container(UserService, "Сервис пользователей", "golang", "Управляет данными пользователей")
+        ContainerDb(UserDB, "База данных пользователей", "PostgreSQL", "Хранит данные пользователей")
+
+        SystemQueue(AppQueue, "Шина событий", "Apache Kafka")
+
+        Rel(WebApp, APIgw, "Использует")
+        Rel(MobileApp, APIgw, "Использует")
+
+        Rel(APIgw, DeviceService, "Запросы")
+        Rel(APIgw, UserService, "Запросы")
+        Rel(TelemetryService, TelemetryDb, "Использует")
+        Rel(DeviceService, DeviceDB, "Использует")
+        Rel(UserService, UserDB, "Использует")
+        Rel(VendorService, VendorServiceDB, "Использует")
+        Rel(TelemetryService, AppQueue, "Отправка данных")
+
+        BiRel(DeviceService, UserService, "Запросы")
+        BiRel(DeviceService, TelemetryService, "Обмен данными")
+        BiRel(AppQueue, DeviceService, "Получение данных")
+        BiRel(VendorService, AppQueue, "Обмен событиями")
+    }
+    System_Ext(VendorAPI, "API Поставщика", "API поставщика системы отопления")
+    System_Ext(SmartHomeDevice, "Устройство умного дома", "Устройство для умного дома")
+    Lay_D(VendorService, VendorAPI)
+    Rel(person, MobileApp, "Использует")
+    Rel(person, WebApp, "Использует")
+    Rel(administrator, WebApp, "Использует")
+    Rel(VendorService, VendorAPI,  "Запросы")
+    Rel(VendorAPI, SmartHomeDevice, "Управление")
+
+@enduml
