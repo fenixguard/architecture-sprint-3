@@ -1,0 +1,153 @@
+openapi: 3.0.0
+info:
+  title: Device Service
+  version: 0.1.0
+
+paths:
+  /devices/{device_id}:
+    get:
+      summary: Получение информации об устройстве
+      parameters:
+        - name: device_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Устройство найдено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Device'
+              examples:
+                example-1:
+                  summary: Успешный ответ
+                  value:
+                    id: "123e4567-e89b-12d3-a456-426614174000"
+                    serial_number: "SN123456789"
+                    status: true
+                    type_id: "type-uuid"
+                    house_id: "house-uuid"
+        '404':
+          description: Устройство не найдено
+          content:
+            application/json:
+              examples:
+                example-1:
+                  summary: Устройство не найдено
+                  value:
+                    error: "Device not found."
+    put:
+      summary: Обновление состояния устройства
+      parameters:
+        - name: device_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: boolean
+      responses:
+        '200':
+          description: Состояние обновлено успешно
+          content:
+            application/json:
+              examples:
+                example-1:
+                  summary: Ответ об успешном обновлении
+                  value:
+                    message: "Device status updated successfully."
+        '404':
+          description: Устройство не найдено
+          content:
+            application/json:
+              examples:
+                example-1:
+                  summary: Устройство не найдено
+                  value:
+                    error: "Device not found."
+        '500':
+          description: Ошибка сервера
+          content:
+            application/json:
+              examples:
+                example-1:
+                  summary: Ошибка сервера
+                  value:
+                    error: "Internal server error."
+    post:
+      summary: Отправка команды устройству
+      parameters:
+        - name: device_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                command:
+                  type: string
+                  description: Команда для выполнения устройством
+      responses:
+        '200':
+          description: Команда отправлена успешно
+          content:
+            application/json:
+              examples:
+                example-1:
+                  summary: Ответ об успешной отправке команды
+                  value:
+                    message: "Command sent successfully."
+        '404':
+          description: Устройство не найдено
+          content:
+            application/json:
+              examples:
+                example-1:
+                  summary: Устройство не найдено
+                  value:
+                    error: "Device not found."
+        '500':
+          description: Ошибка сервера
+          content:
+            application/json:
+              examples:
+                example-1:
+                  summary: Ошибка сервера
+                  value:
+                    error: "Internal server error."
+
+components:
+  schemas:
+    Device:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        serial_number:
+          type: string
+        status:
+          type: boolean
+        type_id:
+          type: string
+          format: uuid
+        house_id:
+          type: string
+          format: uuid

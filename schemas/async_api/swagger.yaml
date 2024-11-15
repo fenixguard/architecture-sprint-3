@@ -1,0 +1,35 @@
+asyncapi: 3.0.0
+info:
+  title: Telemetry Service
+  version: 1.0.0
+  description: 'Сервис обработки телеметрии, получает данные от устройств'
+channels:
+  telemetry.data.new:
+    address: telemetry.data.new
+    messages:
+      subscribe.message:
+        contentType: application/json
+        payload:
+          type: object
+          properties:
+            device_id:
+              type: string
+              format: uuid
+            telemetry_type:
+              type: string
+              description: 'Тип телеметрии (например, температура)'
+            timestamp:
+              type: string
+              format: date-time
+            data:
+              type: object
+              additionalProperties: true
+    description: Новые телеметрические данные
+operations:
+  telemetry.data.new.subscribe:
+    action: send
+    channel:
+      $ref: '#/channels/telemetry.data.new'
+    summary: Получить новые телеметрические данные
+    messages:
+      - $ref: '#/channels/telemetry.data.new/messages/subscribe.message'

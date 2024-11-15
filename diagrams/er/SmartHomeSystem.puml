@@ -1,0 +1,46 @@
+@startuml
+entity User {
+  id UUID
+  username Varchar
+  email Varchar
+}
+
+entity House {
+  id UUID
+  user_id UUID
+  address Varchar
+}
+
+entity Device {
+  id UUID
+  type_id UUID
+  house_id UUID
+  serial_number Varchar
+  status Boolean
+}
+
+entity DeviceType {
+  id UUID
+  name Varchar
+}
+
+entity Module {
+  id UUID
+  device_id UUID
+  configuration Varchar
+}
+
+entity TelemetryData {
+  id UUID
+  device_id UUID
+  telemetry_type Varchar
+  timestamp DateTime
+  data JSON
+}
+
+House }|-- User
+Device }|-- House
+Device }|-- DeviceType
+TelemetryData }|-- Device
+Module }|-- Device
+@enduml

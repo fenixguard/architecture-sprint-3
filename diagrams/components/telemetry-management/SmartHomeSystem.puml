@@ -1,0 +1,23 @@
+@startuml
+    !include <C4/C4_Container.puml>
+    !include <C4/C4_Component.puml>
+
+    LAYOUT_WITH_LEGEND()
+
+    Container_Boundary(TelemetryService, "Сервис телеметрии") {
+        Component(TelemetryServiceAPI, "API Сервиса телеметрии", "golang", "Обработка API запросов")
+        Component(TelemetrySubscriber, "Подписчик телеметрии", "golang", "Получение событий от устройств")
+    }
+
+    ContainerDb(DeviceDB, "База данных телеметрии", "Redis", "Хранит телеметрические данные")
+    Container(DeviceService, "Сервис устройств", "golang", "Управляет данными устройств")
+
+    SystemQueue(AppQueue, "Шина сообщений", "Apache Kafka")
+
+    Rel(DeviceService, TelemetryServiceAPI, "Запросы")
+    Rel(TelemetryServiceAPI, TelemetrySubscriber, "Взаимодействие")
+    Rel(TelemetrySubscriber, DeviceDB, "Сохраняет данные")
+    Rel(TelemetryServiceAPI, DeviceDB, "Обращается к базе данных")
+    Rel(TelemetrySubscriber, AppQueue, "Использует для передачи данных")
+
+@enduml
