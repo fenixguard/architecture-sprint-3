@@ -103,7 +103,7 @@ API предоставляет следующие функции:
 
 1. `GET /devices/{device_id}` – получение информации об устройстве.
 2. `PUT /devices/{device_id}/status` – обновление состояния устройства.
-3. `POST /devices/{device_id}/command` – отправка команды устройству.
+3. `POST /devices/{device_id}/commands` – отправка команды устройству.
 
 ### Структура API [OpenApi схема](./schemas/rest_api/swagger.yaml)
 
@@ -149,6 +149,10 @@ paths:
                   summary: Устройство не найдено
                   value:
                     error: "Device not found."
+      x-examples:
+        request:
+          curl: |
+            curl -X GET "https://api.example.com/devices/123e4567-e89b-12d3-a456-426614174000"
     put:
       summary: Обновление состояния устройства
       parameters:
@@ -167,6 +171,8 @@ paths:
               properties:
                 status:
                   type: boolean
+              example:
+                status: true
       responses:
         '200':
           description: Состояние обновлено успешно
@@ -195,8 +201,16 @@ paths:
                   summary: Ошибка сервера
                   value:
                     error: "Internal server error."
+      x-examples:
+        request:
+          curl: |
+            curl -X PUT "https://api.example.com/devices/123e4567-e89b-12d3-a456-426614174000" \
+            -H "Content-Type: application/json" \
+            -d '{"status": true}'
+
+  /devices/{device_id}/commands:
     post:
-      summary: Отправка команды устройству
+      summary: Создание новой команды для устройства
       parameters:
         - name: device_id
           in: path
@@ -209,11 +223,9 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                command:
-                  type: string
-                  description: Команда для выполнения устройством
+              $ref: '#/components/schemas/Command'
+            example:
+              command: "reboot"
       responses:
         '200':
           description: Команда отправлена успешно
@@ -242,6 +254,12 @@ paths:
                   summary: Ошибка сервера
                   value:
                     error: "Internal server error."
+      x-examples:
+        request:
+          curl: |
+            curl -X POST "https://api.example.com/devices/123e4567-e89b-12d3-a456-426614174000/commands" \
+            -H "Content-Type: application/json" \
+            -d '{"command": "reboot"}'
 
 components:
   schemas:
@@ -261,6 +279,16 @@ components:
         house_id:
           type: string
           format: uuid
+
+    Command:
+      type: object
+      properties:
+        command:
+          type: string
+          description: Команда для выполнения устройством
+      required:
+        - command
+
 ```
 
 ### Примеры запросов и ответов
@@ -307,7 +335,7 @@ Content-Type: application/json
 **Запрос:**
 
 ```http request
-POST /devices/123e4567-e89b-12d3-a456-426614174000/command
+POST /devices/123e4567-e89b-12d3-a456-426614174000/commands
 Content-Type: application/json
 
 {
